@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-controller
+  namespace: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-controller
+  template:
+    metadata:
+      labels:
+        app: jenkins-controller
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      serviceAccountName: jenkins-cluster-admin
+      containers:
+      - name: jenkins
+        image: lirondadon/jenkins-controller:1.0.3
+        ports:
+        - name: httpport
+          containerPort: 8080
+          protocol: TCP
+        - name: jnlpport
+          containerPort: 50000
+          protocol: TCP
+        # livenessProbe:
+        #   httpGet:
+        #     path: "/login"
+        #     port: 8080
+        #   initialDelaySeconds: 240
+        #   periodSeconds: 10
+        #   timeoutSeconds: 5
+        #   failureThreshold: 5
+        # readinessProbe:
+        #   httpGet:
+        #     path: "/login"
+        #     port: 8080
+        #   initialDelaySeconds: 180
+        #   periodSeconds: 10
+        #   timeoutSeconds: 5
+        #   failureThreshold: 3
+        env:
+        - name: JENKINS_OPTS
+          value: --prefix=/jenkins
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+      volumes:
+      - name: jenkins-home
+        persistentVolumeClaim:
+          claimName: jenkins-pv-claim
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-svc
+  namespace: jenkins
+spec:
+  selector:
+    app: jenkins-controller
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+    - name: jnlp
+      port: 50000
+      targetPort: 50000

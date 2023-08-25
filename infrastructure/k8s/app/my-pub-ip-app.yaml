@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-pub-ip-deployment
+  namespace: app
+  labels:
+    app: my-pub-ip-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-pub-ip-app
+  template:
+    metadata:
+      labels:
+        service: my-pub-ip-svc
+        app: my-pub-ip-app
+    spec:
+      # serviceAccountName: opsschool-sa
+      containers:
+      - name: my-pub-ip
+        image: lirondadon/my-pub-ip:0.0.1
+        ports:
+        - containerPort: 5000
+          name: http
+          protocol: TCP
+        # livenessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: 5000
+        #   initialDelaySeconds: 180
+        #   periodSeconds: 15
+        #   timeoutSeconds: 10
+        #   failureThreshold: 10
+        # readinessProbe:
+        #   httpGet:
+        #     path: /health
+        #     port: 5000
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 15
+        #   timeoutSeconds: 10
+        #   failureThreshold: 5
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: my-pub-ip-app
+      - maxSkew: 1
+        topologyKey: node
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: my-pub-ip-app
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-pub-ip-svc
+  namespace: app
+  labels:
+spec:
+  ports:
+  - name: http
+    port: 5000
+    targetPort: 5000
+    protocol: TCP
+  selector:
+    app: my-pub-ip-app

@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jenkins-ingress
+  namespace: jenkins
+  annotations:
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # nginx.ingress.kubernetes.io/default-backend: kandula-svc
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    external-dns.alpha.kubernetes.io/hostname: lirondadon.link
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/group.name: "prod-external"
+spec:
+  # ingressClassName: nginx
+  # tls:
+    # - hosts:
+      # - kandula.lirondadon.link
+      # secretName: echo-tls
+  rules:
+  - host: jenkins-k8s.lirondadon.link
+    http:
+      paths:
+      - backend:
+          service:
+            name: jenkins-svc
+            port:
+              number: 80
+        path: /jenkins
+        pathType: Exact

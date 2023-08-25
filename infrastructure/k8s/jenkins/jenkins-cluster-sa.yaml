@@ -1,0 +1,92 @@
+#TODO lesser jenkins unnecessary previleges
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins-cluster-admin
+  namespace: jenkins
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jenkins-cluster-role
+  namespace: jenkins
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["create","delete","get","list","patch","update","watch"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create","delete","get","list","patch","update","watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get","list","watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get","list","watch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get","list","watch"]
+  - apiGroups: [""]
+    resources: 
+      - services
+    verbs:
+      - list
+      - get
+      - patch
+      - update
+      - create
+      - delete
+      - watch
+  - apiGroups: ["apps"]
+    resources: 
+      - deployments
+    verbs:
+      - list
+      - get
+      - patch
+      - update
+      - create
+      - delete
+      - watch
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - ingresses
+    verbs:
+      - list
+      - get
+      - patch
+      - update
+      - create
+      - delete
+      - watch
+  - apiGroups: ["consul.hashicorp.com"]
+    resources:
+      - servicedefaults
+    verbs:
+      - list
+      - get
+      - watch
+  - apiGroups: ["batch"]
+    resources:
+      - cronjobs
+    verbs:
+      - list
+      - get
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jenkins-cluster-role-binding
+  namespace: jenkins
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jenkins-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: jenkins-cluster-admin
+  namespace: jenkins
