@@ -1,14 +1,14 @@
 # cicd-k8s-project
 
 ## What Is This Project?
-This project support the running and maintaining my-pub-ip web-app. (https://github.com/lirond101/my-pub-ip).
-This process is established by CI/CD flow managed by Jenkins which run on container inside the EKS.
-The project is mainly built from terraform files and few more provisioning files which on future will be integrated into terraform files.
+This project is aim to build thr infrasructure behing the ci-cd process of my-pub-ip web-app. (https://github.com/lirond101/my-pub-ip).
+This process is executed by Jenkins running on a container inside a EKS cluster.
+The project is mainly automatic from establishment the vpc and eks with Terraform and bash scrpits, with few manual steps on Jenkins UI.
 
 ## How to run?
 ### Your variables
 Please change variables here:
- 1. Terraform: variables.tf and tfvars.tf.
+ Terraform: variables.tf and tfvars.tf.
 
 ### Setup project
 ```shell script

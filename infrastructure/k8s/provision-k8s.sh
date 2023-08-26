@@ -61,5 +61,6 @@ sleep 60
 
 # APP
 # TODO Move as jenkins jobs
+kubectl create namespace app
 kubectl apply -f app/my-pub-ip-app.yaml
 kubectl apply -f app/my-pub-ip-ingress.yaml

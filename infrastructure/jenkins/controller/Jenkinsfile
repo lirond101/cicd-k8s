@@ -1,0 +1,74 @@
+pipeline {
+
+    environment {
+        BUILD_NUMBER = "${env.BUILD_ID}"
+        GITHUB_USERNAME = "lirond101"
+        GITHUB_EMAIL = "lirond101@gmail.com"
+        TARGET_BRANCH = "main"
+        TAG = "${params.TAG}"
+    }
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                metadata:
+                  namespace: jenkins
+                  labels:
+                    app: kubectl
+                  name: kubectl
+                spec:
+                  serviceAccountName: jenkins-cluster-admin
+                  containers:
+                  - name: kubectl
+                    image: lirondadon/kubectl:latest
+                    securityContext:
+                      privileged: true
+                    command: ['sleep', '99999']
+                    tty: true
+                    imagePullPolicy: IfNotPresent
+                '''
+        }
+    }
+    stages {
+        stage('Clone') {
+            steps {
+                git branch: $TARGET_BRANCH, credentialsId: 'github', url: 'git@github.com:lirond101/kandula-project.git'
+            }
+        }
+
+        stage('Deploying kandula app to Kubernetes') {
+            steps {
+                container('kubectl') {
+                    sh "sed -i 's+lirondadon/kandula.*+lirondadon/kandula:$TAG+g' infrastructure/k8s/kandula/kandula-app.yaml"
+                    sh 'kubectl apply -f infrastructure/k8s/kandula/'
+                }
+            }
+        }
+
+        stage('Update Github Repository') {
+            steps {
+                sh("sed -i 's+lirondadon/kandula.*+lirondadon/kandula:$TAG+g' infrastructure/k8s/kandula/kandula-app.yaml")
+                sh('''
+                    git checkout -B $TARGET_BRANCH
+                    git config user.email $GITHUB_EMAIL
+                    git config user.name $GITHUB_USERNAME
+                    git add . && git commit -am "[Jenkins CI] Tag kandula image"
+                ''')
+                sshagent(['github']) {
+                    sh("""
+                        #!/usr/bin/env bash
+                        set +x
+                        export GIT_SSH_COMMAND="ssh -oStrictHostKeyChecking=no"
+                        git push origin HEAD:\$TARGET_BRANCH
+                     """)
+                }
+            }
+        }
+    }
+    post{
+        always{
+            slackSend botUser: true, channel: 'jenkins', message: 'Kandula app was redeployed succefully!', teamDomain: 'ops-dtn', tokenCredentialId: 'slack'
+        }
+    }
+}

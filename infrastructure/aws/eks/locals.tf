@@ -10,7 +10,7 @@ locals {
   }
   name_prefix = "${var.project}-${var.env_name}"
   cluster_name = tostring(data.aws_s3_object.cluster_name.body)
-  k8s_service_account_namespace = "kandula"
-  k8s_service_account_name      = "opsschool-sa"
+  # k8s_service_account_namespace = "kandula"
+  # k8s_service_account_name      = "opsschool-sa"
 }
 
