@@ -19,7 +19,7 @@ spec:
       # serviceAccountName: opsschool-sa
       containers:
       - name: my-pub-ip
-        image: lirondadon/my-pub-ip:0.0.2
+        image: lirondadon/my-pub-ip:27082023-jenkins-cicd-5
         ports:
         - containerPort: 5000
           name: http
