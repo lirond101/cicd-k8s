@@ -1,7 +1,6 @@
 pipeline {
 
     environment {
-        BUILD_NUMBER = "${env.BUILD_ID}"
         GITHUB_USERNAME = "lirond101"
         GITHUB_EMAIL = "lirond101@gmail.com"
         TARGET_BRANCH = "main"
@@ -33,27 +32,27 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                git branch: $TARGET_BRANCH, credentialsId: 'github', url: 'git@github.com:lirond101/kandula-project.git'
+                git branch: 'main', credentialsId: 'github', url: 'git@github.com:lirond101/cicd-k8s.git'
             }
         }
 
-        stage('Deploying kandula app to Kubernetes') {
+        stage('Deploy') {
             steps {
                 container('kubectl') {
-                    sh "sed -i 's+lirondadon/kandula.*+lirondadon/kandula:$TAG+g' infrastructure/k8s/kandula/kandula-app.yaml"
-                    sh 'kubectl apply -f infrastructure/k8s/kandula/'
+                    sh "sed -i 's+lirondadon/my-pub-ip.*+lirondadon/my-pub-ip:$TAG+g' infrastructure/k8s/app/my-pub-ip-app.yaml"
+                    sh 'kubectl apply -f infrastructure/k8s/app/'
                 }
             }
         }
 
         stage('Update Github Repository') {
             steps {
-                sh("sed -i 's+lirondadon/kandula.*+lirondadon/kandula:$TAG+g' infrastructure/k8s/kandula/kandula-app.yaml")
+                sh("sed -i 's+lirondadon/my-pub-ip.*+lirondadon/my-pub-ip:$TAG+g' infrastructure/k8s/app/my-pub-ip-app.yaml")
                 sh('''
                     git checkout -B $TARGET_BRANCH
                     git config user.email $GITHUB_EMAIL
                     git config user.name $GITHUB_USERNAME
-                    git add . && git commit -am "[Jenkins CI] Tag kandula image"
+                    git add . && git commit -am "[Jenkins CI] Tag my-pub-ip image"
                 ''')
                 sshagent(['github']) {
                     sh("""
@@ -68,7 +67,7 @@ pipeline {
     }
     post{
         always{
-            slackSend botUser: true, channel: 'jenkins', message: 'Kandula app was redeployed succefully!', teamDomain: 'ops-dtn', tokenCredentialId: 'slack'
+            slackSend botUser: true, channel: 'jenkins', message: 'my-pub-ip app was redeployed succefully!', teamDomain: 'ops-dtn', tokenCredentialId: 'slack'
         }
     }
 }
